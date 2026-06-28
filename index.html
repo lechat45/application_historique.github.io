@@ -42,6 +42,9 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* hidden doit TOUJOURS l'emporter, même sur un display de classe (.modal, .analyse...) */
+[hidden] { display: none !important; }
+
 html, body {
   height: 100%;
   background: var(--bg);
@@ -552,11 +555,13 @@ select.field__input { appearance: none; }
 
   <script>
 
-/* Manifest PWA inline — installation possible sans fichier séparé */
+/* Manifest PWA inline : URLs absolues (start_url) + icône data-URI valide */
 (function () {
+  var here = location.origin + location.pathname;
   var m = {
-    name: "Lumen — Scanner le monde", short_name: "Lumen",
-    start_url: ".", display: "standalone", orientation: "portrait",
+    name: "Lumen \u2014 Scanner le monde", short_name: "Lumen",
+    start_url: here, scope: here,
+    display: "standalone", orientation: "portrait",
     background_color: "#0A0E17", theme_color: "#0A0E17",
     icons: [{ src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230A0E17'/%3E%3Ccircle cx='256' cy='256' r='150' fill='none' stroke='%2338E8FF' stroke-width='28'/%3E%3Ccircle cx='256' cy='256' r='70' fill='%23121a2b'/%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }]
   };
