@@ -283,7 +283,66 @@ body.big-text .tl__event, body.big-text .fact { font-size: 18px; }
 body.big-text .fiche__accroche { font-size: 22px; }
 body.big-text .source__title { font-size: 17px; }
 
-  </style>
+/* ===================================================================
+   NOUVEAUTÉS — réglages avancés, thème sombre, recherche, favoris
+   =================================================================== */
+
+/* --- Thème sombre --- */
+[data-theme="dark"] {
+  --bg:      #1C1A2E;
+  --surface: #272343;
+  --ink:     #F1EFFA;
+  --muted:   #9E98BC;
+  --hair:    rgba(255,255,255,0.10);
+  --ent-bg:  #163A30;
+  --his-bg:  #3A2A18;
+  --shadow:  0 10px 26px rgba(0,0,0,0.35);
+}
+[data-theme="dark"] body { background: #100E1C; }
+[data-theme="dark"] .scanner { background: #201C36; }
+[data-theme="dark"] .stat-card--p { background: #2E2752; color: #C9BBFF; }
+[data-theme="dark"] .switch__track { background: #3A3556; }
+[data-theme="dark"] .chip { background: var(--surface); }
+[data-theme="dark"] .search { background: var(--surface); }
+
+/* --- Curseur (range) --- */
+.range { -webkit-appearance: none; appearance: none; width: 148px; height: 6px; border-radius: 999px; background: var(--hair); outline: none; cursor: pointer; }
+.range::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--purple); cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+.range::-moz-range-thumb { width: 22px; height: 22px; border: 0; border-radius: 50%; background: var(--purple); cursor: pointer; }
+
+/* --- Densité compacte --- */
+body.compact .row { padding: 12px 16px; }
+body.compact .group { margin-bottom: 16px; }
+body.compact .group__label { margin: 0 6px 7px; }
+body.compact .card { padding: 9px; }
+body.compact .stats-row { margin-bottom: 18px; }
+
+/* --- Animations réduites --- */
+.reduce-motion *, .reduce-motion *::before, .reduce-motion *::after { transition: none !important; animation: none !important; }
+
+/* --- Recherche historique --- */
+.search-wrap { position: relative; margin-bottom: 14px; }
+.search__ico { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 19px; height: 19px; color: var(--muted); pointer-events: none; }
+.search { width: 100%; font-family: var(--font); font-weight: 600; font-size: 15.5px; color: var(--ink); background: var(--surface); border: 2px solid transparent; border-radius: 14px; padding: 13px 15px 13px 44px; outline: none; box-shadow: var(--shadow); }
+.search:focus { border-color: var(--purple); }
+.search::placeholder { color: var(--muted); }
+
+/* --- Étoile favori sur les cartes --- */
+.card__fav { flex-shrink: 0; width: 34px; height: 34px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform .12s; }
+.card__fav:active { transform: scale(0.82); }
+.card__fav--on { color: var(--yellow); }
+.card__fav svg { width: 20px; height: 20px; }
+
+/* --- Actions de fiche en grille (4 boutons) --- */
+.fiche__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.action { padding: 14px; font-size: 15px; }
+.action--fav { color: var(--yellow-d); }
+[data-theme="dark"] .action--fav { color: var(--yellow); }
+
+/* --- Badge version "À propos" --- */
+.about__ver { font-family: var(--font); font-size: 12px; font-weight: 800; color: var(--purple); background: rgba(124,92,252,0.14); padding: 2px 9px; border-radius: 999px; margin-left: 7px; vertical-align: middle; }
+
+</style>
 </head>
 <body>
 <div class="app">
@@ -328,10 +387,15 @@ body.big-text .source__title { font-size: 17px; }
   <!-- ===================== HISTORIQUE ===================== -->
   <section class="view" id="view-history">
     <header class="page-head"><h1 class="page-title">Historique</h1><p class="page-sub">Tes scans, rien que pour toi&nbsp;!</p></header>
+    <div class="search-wrap">
+      <svg class="search__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      <input id="historySearch" class="search" type="search" placeholder="Rechercher une fiche…" autocomplete="off" />
+    </div>
     <div class="filters" id="filters">
       <button class="chip chip--active" data-filter="all">Tout</button>
       <button class="chip" data-filter="entreprise">Entreprises</button>
       <button class="chip" data-filter="histoire">Histoire</button>
+      <button class="chip" data-filter="fav">★ Favoris</button>
     </div>
     <div class="history" id="historyList"></div>
     <div class="empty" id="historyEmpty" hidden>
@@ -354,6 +418,20 @@ body.big-text .source__title { font-size: 17px; }
     </div>
 
     <p class="group__label">Apparence</p>
+    <div class="group">
+      <div class="row"><span class="row__label">Thème</span>
+        <select class="row__select" id="theme"><option value="auto">Automatique</option><option value="clair">Clair</option><option value="sombre">Sombre</option></select>
+      </div>
+      <div class="row"><span class="row__label">Texte des fiches</span>
+        <select class="row__select" id="textSize"><option value="normal">Normal</option><option value="grand">Grand</option></select>
+      </div>
+      <div class="row"><span class="row__label">Densité</span>
+        <select class="row__select" id="density"><option value="confort">Confortable</option><option value="compact">Compact</option></select>
+      </div>
+      <div class="row"><span class="row__label">Réduire les animations</span>
+        <label class="switch"><input type="checkbox" id="reduceMotion" /><span class="switch__track"></span></label>
+      </div>
+    </div>
     <div class="group group--stack">
       <span class="stack__label">Couleur d'accent</span>
       <div class="swatches" id="swatches">
@@ -362,31 +440,49 @@ body.big-text .source__title { font-size: 17px; }
         <button class="sw" data-accent="menthe" style="background:#16B981" aria-label="Menthe"></button>
         <button class="sw" data-accent="bleu" style="background:#4FB0FF" aria-label="Bleu"></button>
         <button class="sw" data-accent="rose" style="background:#FF7AC6" aria-label="Rose"></button>
-      </div>
-    </div>
-    <div class="group">
-      <div class="row"><span class="row__label">Texte des fiches</span>
-        <select class="row__select" id="textSize"><option value="normal">Normal</option><option value="grand">Grand</option></select>
+        <button class="sw" data-accent="ambre" style="background:#FFA12C" aria-label="Ambre"></button>
       </div>
     </div>
 
-    <p class="group__label">Connexion</p>
-    <div class="group group--stack">
-      <label class="stack__label" for="backendUrl">Adresse du serveur</label>
-      <input class="stack__input" id="backendUrl" type="url" placeholder="https://ton-app.onrender.com" inputmode="url" />
-      <p class="stack__help">L'URL de ton backend. La clé Groq y reste secrète, jamais sur l'appareil.</p>
-    </div>
-
-    <p class="group__label">Préférences</p>
+    <p class="group__label">Lecture vocale</p>
     <div class="group">
-      <div class="row"><span class="row__label">Langue des fiches</span>
-        <select class="row__select" id="langue"><option value="français">Français</option><option value="anglais">English</option><option value="espagnol">Español</option></select>
-      </div>
       <div class="row"><span class="row__label">Lecture automatique</span>
         <label class="switch"><input type="checkbox" id="autoRead" /><span class="switch__track"></span></label>
       </div>
+      <div class="row"><span class="row__label">Vitesse de lecture</span>
+        <input class="range" id="ttsRate" type="range" min="0.6" max="1.5" step="0.1" />
+      </div>
+      <div class="row"><span class="row__label">Voix</span>
+        <select class="row__select" id="ttsVoice"><option value="">Par défaut</option></select>
+      </div>
+    </div>
+
+    <p class="group__label">Scan</p>
+    <div class="group">
+      <div class="row"><span class="row__label">Langue des fiches</span>
+        <select class="row__select" id="langue"><option value="français">Français</option><option value="anglais">English</option><option value="espagnol">Español</option><option value="allemand">Deutsch</option><option value="italien">Italiano</option></select>
+      </div>
+      <div class="row"><span class="row__label">Qualité d'image</span>
+        <select class="row__select" id="imgQuality"><option value="eco">Éco (rapide)</option><option value="normale">Normale</option><option value="haute">Haute</option></select>
+      </div>
+      <div class="row"><span class="row__label">Caméra à l'ouverture</span>
+        <label class="switch"><input type="checkbox" id="autoCamera" /><span class="switch__track"></span></label>
+      </div>
+      <div class="row"><span class="row__label">Son au scan</span>
+        <label class="switch"><input type="checkbox" id="scanSound" /><span class="switch__track"></span></label>
+      </div>
       <div class="row"><span class="row__label">Vibration au scan</span>
         <label class="switch"><input type="checkbox" id="vibrate" /><span class="switch__track"></span></label>
+      </div>
+    </div>
+
+    <p class="group__label">Fiches &amp; historique</p>
+    <div class="group">
+      <div class="row"><span class="row__label">Afficher la confiance</span>
+        <label class="switch"><input type="checkbox" id="showConfidence" /><span class="switch__track"></span></label>
+      </div>
+      <div class="row"><span class="row__label">Enregistrer l'historique</span>
+        <label class="switch"><input type="checkbox" id="saveHistory" /><span class="switch__track"></span></label>
       </div>
     </div>
 
@@ -394,9 +490,16 @@ body.big-text .source__title { font-size: 17px; }
     <div class="group">
       <button class="row row--btn" id="exportBtn"><span class="row__label">Exporter mes fiches</span><span class="row__value">JSON ›</span></button>
       <button class="row row--btn" id="clearBtn"><span class="row__label row__label--danger">Effacer l'historique</span><span class="row__value">›</span></button>
+      <button class="row row--btn" id="resetBtn"><span class="row__label row__label--danger">Réinitialiser les réglages</span><span class="row__value">›</span></button>
     </div>
 
-    <p class="foot">Lumen · fiches via Groq · données locales</p>
+    <p class="group__label">À propos</p>
+    <div class="group group--stack about">
+      <span class="stack__label">Lumen <span class="about__ver">v1.0</span></span>
+      <p class="stack__help">Photographie un logo ou un sujet, obtiens une fiche claire et sourcée (Wikipédia). Tes données restent sur ton appareil. La clé du serveur n'est jamais stockée ici.</p>
+    </div>
+
+    <p class="foot">Lumen · fiches sourcées · 100% local &amp; gratuit</p>
   </section>
 
   <!-- ===================== ANALYSE ===================== -->
@@ -450,18 +553,7 @@ body.big-text .source__title { font-size: 17px; }
 
 </div>
   <script>
-
-(function () {
-  var here = location.origin + location.pathname;
-  var m = { name: "Lumen \u2014 Scanner le monde", short_name: "Lumen",
-    start_url: here, scope: here, display: "standalone", orientation: "portrait",
-    background_color: "#FFF6EC", theme_color: "#FFF6EC",
-    icons: [{ src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23FFF6EC'/%3E%3Crect x='4' y='5' width='16' height='15' rx='6' fill='%237C5CFC'/%3E%3Ccircle cx='12' cy='12.5' r='3.6' fill='%23FFF6EC'/%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }] };
-  var b = new Blob([JSON.stringify(m)], { type: "application/json" });
-  var l = document.createElement("link"); l.rel = "manifest"; l.href = URL.createObjectURL(b);
-  document.head.appendChild(l);
-})();
-
+(function(){try{var M={"name": "Lumen — Scanner le monde", "short_name": "Lumen", "description": "Photographie un logo ou un sujet historique, obtiens une fiche sourcée générée par IA.", "start_url": "./index.html", "display": "standalone", "orientation": "portrait", "background_color": "#0A0E17", "theme_color": "#0A0E17", "icons": [{"src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230A0E17'/%3E%3Ccircle cx='256' cy='256' r='150' fill='none' stroke='url(%23g)' stroke-width='28'/%3E%3Ccircle cx='256' cy='256' r='70' fill='%23121a2b'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2338E8FF'/%3E%3Cstop offset='1' stop-color='%23A579FF'/%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable"}]};var b=new Blob([JSON.stringify(M)],{type:'application/manifest+json'});var l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(b);document.head.appendChild(l);}catch(e){}})();
 /* ===================================================================
    Lumen — logique applicative
    La clé Groq n'est JAMAIS ici : on parle uniquement à notre backend.
@@ -470,9 +562,11 @@ body.big-text .source__title { font-size: 17px; }
 const $  = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
 
+/* URL du backend — figée ici, plus aucun champ visible côté utilisateur. */
+const BACKEND = "https://backend-historique.onrender.com";
+
 const store = {
-  get backend() { return (localStorage.getItem("lumen.backend") || "").replace(/\/+$/, ""); },
-  set backend(v) { localStorage.setItem("lumen.backend", v); },
+  get backend() { return BACKEND; },
   get langue() { return localStorage.getItem("lumen.langue") || "français"; },
   set langue(v) { localStorage.setItem("lumen.langue", v); },
   get autoRead() { return localStorage.getItem("lumen.autoread") === "1"; },
@@ -483,11 +577,59 @@ const store = {
   set textSize(v) { localStorage.setItem("lumen.textsize", v); },
   get vibrate() { return localStorage.getItem("lumen.vibrate") === "1"; },
   set vibrate(v) { localStorage.setItem("lumen.vibrate", v ? "1" : "0"); },
+  /* --- nouveaux réglages --- */
+  get theme() { return localStorage.getItem("lumen.theme") || "auto"; },
+  set theme(v) { localStorage.setItem("lumen.theme", v); },
+  get density() { return localStorage.getItem("lumen.density") || "confort"; },
+  set density(v) { localStorage.setItem("lumen.density", v); },
+  get reduceMotion() { return localStorage.getItem("lumen.reducemotion") === "1"; },
+  set reduceMotion(v) { localStorage.setItem("lumen.reducemotion", v ? "1" : "0"); },
+  get ttsRate() { return parseFloat(localStorage.getItem("lumen.ttsrate")) || 1.0; },
+  set ttsRate(v) { localStorage.setItem("lumen.ttsrate", String(v)); },
+  get ttsVoice() { return localStorage.getItem("lumen.ttsvoice") || ""; },
+  set ttsVoice(v) { localStorage.setItem("lumen.ttsvoice", v); },
+  get imgQuality() { return localStorage.getItem("lumen.imgquality") || "normale"; },
+  set imgQuality(v) { localStorage.setItem("lumen.imgquality", v); },
+  get autoCamera() { return localStorage.getItem("lumen.autocamera") !== "0"; },   // ON par défaut
+  set autoCamera(v) { localStorage.setItem("lumen.autocamera", v ? "1" : "0"); },
+  get scanSound() { return localStorage.getItem("lumen.scansound") === "1"; },
+  set scanSound(v) { localStorage.setItem("lumen.scansound", v ? "1" : "0"); },
+  get showConfidence() { return localStorage.getItem("lumen.showconf") !== "0"; },  // ON par défaut
+  set showConfidence(v) { localStorage.setItem("lumen.showconf", v ? "1" : "0"); },
+  get saveHistory() { return localStorage.getItem("lumen.savehistory") !== "0"; },  // ON par défaut
+  set saveHistory(v) { localStorage.setItem("lumen.savehistory", v ? "1" : "0"); },
 };
 
-const ACCENTS = { violet:["#7C5CFC","#5E3FE0"], corail:["#FF6B6B","#E84C4C"], menthe:["#16B981","#0E8F63"], bleu:["#4FB0FF","#2E8FE0"], rose:["#FF7AC6","#E85BA8"] };
+const ACCENTS = { violet:["#7C5CFC","#5E3FE0"], corail:["#FF6B6B","#E84C4C"], menthe:["#16B981","#0E8F63"], bleu:["#4FB0FF","#2E8FE0"], rose:["#FF7AC6","#E85BA8"], ambre:["#FFA12C","#E07A1E"] };
 function applyAccent(k) { const a = ACCENTS[k] || ACCENTS.violet; const r = document.documentElement; r.style.setProperty("--purple", a[0]); r.style.setProperty("--purple-d", a[1]); document.querySelectorAll("#swatches .sw").forEach((s) => s.classList.toggle("sw--active", s.dataset.accent === k)); }
 function applyTextSize(v) { document.body.classList.toggle("big-text", v === "grand"); }
+
+/* Thème clair / sombre / auto (suit le système) */
+const _darkMq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+function applyTheme(v) {
+  const dark = v === "sombre" || (v === "auto" && _darkMq && _darkMq.matches);
+  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = dark ? "#15131F" : "#FFF6EC";
+}
+if (_darkMq) _darkMq.addEventListener?.("change", () => { if (store.theme === "auto") applyTheme("auto"); });
+function applyDensity(v) { document.body.classList.toggle("compact", v === "compact"); }
+function applyReduceMotion(v) { document.documentElement.classList.toggle("reduce-motion", !!v); }
+
+/* Petit bip au scan (Web Audio, sans fichier) */
+function scanBeep() {
+  if (!store.scanSound) return;
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+    const ac = new Ctx(); const o = ac.createOscillator(); const g = ac.createGain();
+    o.type = "sine"; o.frequency.value = 660; o.connect(g); g.connect(ac.destination);
+    g.gain.setValueAtTime(0.0001, ac.currentTime); g.gain.exponentialRampToValueAtTime(0.18, ac.currentTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.18);
+    o.start(); o.stop(ac.currentTime + 0.2); o.onended = () => ac.close();
+  } catch {}
+}
+
+/* Qualité d'image -> dimensions + compression avant envoi */
+const IMG_PRESETS = { eco: [900, 0.7], normale: [1280, 0.85], haute: [1800, 0.92] };
 
 let cameraStream = null;
 let analyseAborted = false;
@@ -527,7 +669,7 @@ const db = {
 function showView(name) {
   $$(".view").forEach((v) => v.classList.toggle("view--active", v.id === `view-${name}`));
   $$(".tab").forEach((t) => t.classList.toggle("tab--active", t.dataset.view === name));
-  if (name === "scanner") startCamera(); else stopCamera();
+  if (name === "scanner") { if (store.autoCamera) startCamera(); } else stopCamera();
   if (name === "history") renderHistory();
   if (name === "profil") renderProfil();
 }
@@ -555,7 +697,8 @@ function stopCamera() {
 }
 
 /* Redimensionne avant envoi : plus léger = plus rapide + sous la limite serveur */
-function frameToBlob(source, maxDim = 1280, quality = 0.85) {
+function frameToBlob(source) {
+  const [maxDim, quality] = IMG_PRESETS[store.imgQuality] || IMG_PRESETS.normale;
   const w = source.videoWidth || source.naturalWidth;
   const h = source.videoHeight || source.naturalHeight;
   const scale = Math.min(1, maxDim / Math.max(w, h));
@@ -572,11 +715,13 @@ $("#captureBtn").addEventListener("click", async () => {
   const v = $("#camera");
   if (!v.videoWidth) return toast("Caméra pas prête — importe une image");
   if (store.vibrate) navigator.vibrate?.(15);
+  scanBeep();
   const { blob, thumb } = await frameToBlob(v);
   runPipeline(blob, thumb);
 });
 
 $("#importBtn").addEventListener("click", () => $("#fileInput").click());
+$(".scanner__placeholder")?.addEventListener("click", () => startCamera());
 $("#fileInput").addEventListener("change", async (e) => {
   const file = e.target.files[0]; if (!file) return;
   const img = new Image();
@@ -586,7 +731,6 @@ $("#fileInput").addEventListener("change", async (e) => {
 });
 
 async function runPipeline(blob, thumb) {
-  if (!store.backend) { showView("profil"); return toast("Renseigne d'abord l'adresse du serveur"); }
   analyseAborted = false;
   openAnalyse(); setStep(1, "active");
 
@@ -645,8 +789,8 @@ async function summarizeAndShow(sujet, type, thumb) {
   if (analyseAborted) return;
   setStep(3, "done");
 
-  const item = { id: Date.now(), date: new Date().toISOString(), categorie: (fiche.categorie || type || "autre").toLowerCase(), sujet: fiche.sujet || sujet, thumb, fiche };
-  try { await db.put(item); } catch {}
+  const item = { id: Date.now(), date: new Date().toISOString(), categorie: (fiche.categorie || type || "autre").toLowerCase(), sujet: fiche.sujet || sujet, thumb, fiche, fav: false };
+  if (store.saveHistory) { try { await db.put(item); } catch {} }
   setTimeout(() => { closeAnalyse(); openFiche(item); }, 350);
 }
 
@@ -676,7 +820,8 @@ function openFiche(item) {
   const hero = el("div", "fiche__hero");
   const tagrow = el("div", "fiche__tagrow");
   tagrow.appendChild(el("span", `card__tag tag--${cat}`, esc(cat)));
-  tagrow.insertAdjacentHTML("beforeend", `<span class="conf">CONFIANCE <span class="conf__bar"><span class="conf__fill" style="width:${conf}%"></span></span> ${conf}%</span>`);
+  if (store.showConfidence)
+    tagrow.insertAdjacentHTML("beforeend", `<span class="conf">CONFIANCE <span class="conf__bar"><span class="conf__fill" style="width:${conf}%"></span></span> ${conf}%</span>`);
   hero.appendChild(tagrow);
   hero.appendChild(el("h1", "fiche__title", esc(f.sujet || item.sujet)));
   if (f.accroche) hero.appendChild(el("p", "fiche__accroche", esc(f.accroche)));
@@ -720,9 +865,14 @@ function openFiche(item) {
   const actions = el("div", "fiche__actions");
   const listen = el("button", "action", `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10v4h4l5 4V6L7 10H3z"/><path d="M16 8a4 4 0 010 8"/></svg> Écouter`);
   listen.onclick = () => speak(f);
+  const copy = el("button", "action", `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6a2 2 0 012-2h8"/></svg> Copier`);
+  copy.onclick = () => copyFiche(f);
+  const fav = el("button", "action", favIcon(item.fav) + (item.fav ? " Favori" : " Ajouter"));
+  fav.onclick = async () => { item.fav = !item.fav; try { await db.put(item); } catch {} fav.innerHTML = favIcon(item.fav) + (item.fav ? " Favori" : " Ajouter"); fav.classList.toggle("action--fav", item.fav); toast(item.fav ? "Ajouté aux favoris ★" : "Retiré des favoris"); };
+  fav.classList.toggle("action--fav", item.fav);
   const share = el("button", "action action--primary", `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7"/><path d="M12 3v13M8 7l4-4 4 4"/></svg> Partager`);
   share.onclick = () => shareFiche(f);
-  actions.append(listen, share);
+  actions.append(listen, copy, fav, share);
   body.appendChild(actions);
 
   $("#fiche").hidden = false;
@@ -737,7 +887,16 @@ function speak(f) {
   const synth = window.speechSynthesis; if (!synth) return toast("Synthèse vocale indisponible");
   if (synth.speaking) { synth.cancel(); return; }
   const u = new SpeechSynthesisUtterance([f.accroche, f.resume, f.impact].filter(Boolean).join(". "));
-  u.lang = "fr-FR"; u.rate = 1.02; synth.speak(u);
+  u.lang = "fr-FR"; u.rate = store.ttsRate;
+  if (store.ttsVoice) { const v = (synth.getVoices() || []).find((x) => x.name === store.ttsVoice); if (v) u.voice = v; }
+  synth.speak(u);
+}
+function favIcon(on) { return `<svg viewBox="0 0 24 24" width="18" height="18" fill="${on ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg>`; }
+async function copyFiche(f) {
+  const parts = [f.sujet, f.accroche, f.resume, f.impact].filter(Boolean);
+  if (Array.isArray(f.le_saviez_vous) && f.le_saviez_vous.length) parts.push("Le saviez-vous : " + f.le_saviez_vous.join(" · "));
+  const txt = parts.join("\n\n") + "\n\n— via Lumen";
+  try { await navigator.clipboard.writeText(txt); toast("Fiche copiée 📋"); } catch { toast("Copie impossible"); }
 }
 async function shareFiche(f) {
   const txt = `${f.sujet}\n\n${f.accroche || ""}\n\n${f.resume || ""}\n\n— via Lumen`;
@@ -749,22 +908,30 @@ async function shareFiche(f) {
 /* Historique                                                          */
 /* ------------------------------------------------------------------ */
 let historyFilter = "all";
+let historyQuery = "";
 $$("#filters .chip").forEach((c) => c.addEventListener("click", () => {
   $$("#filters .chip").forEach((x) => x.classList.remove("chip--active"));
   c.classList.add("chip--active"); historyFilter = c.dataset.filter; renderHistory();
 }));
+$("#historySearch")?.addEventListener("input", (e) => { historyQuery = e.target.value.trim().toLowerCase(); renderHistory(); });
 
 async function renderHistory() {
   let items = []; try { items = await db.all(); } catch {}
   items.sort((a, b) => b.id - a.id);
-  if (historyFilter !== "all") items = items.filter((i) => (i.categorie || "").startsWith(historyFilter));
+  if (historyFilter === "fav") items = items.filter((i) => i.fav);
+  else if (historyFilter !== "all") items = items.filter((i) => (i.categorie || "").startsWith(historyFilter));
+  if (historyQuery) items = items.filter((i) => (i.sujet || "").toLowerCase().includes(historyQuery));
   const list = $("#historyList"); list.innerHTML = "";
   $("#historyEmpty").hidden = items.length > 0;
   items.forEach((it) => {
     const cat = (it.categorie || "autre").toLowerCase();
     const card = el("div", "card");
-    card.innerHTML = `<img class="card__thumb" src="${it.thumb || ""}" alt="" /><div class="card__body"><div class="card__title">${esc(it.sujet)}</div><div class="card__meta">${formatDate(it.date)}</div></div><span class="card__tag tag--${cat}">${esc(cat)}</span>`;
+    card.innerHTML = `<img class="card__thumb" src="${it.thumb || ""}" alt="" /><div class="card__body"><div class="card__title">${esc(it.sujet)}</div><div class="card__meta">${formatDate(it.date)}</div></div><button class="card__fav${it.fav ? " card__fav--on" : ""}" aria-label="Favori">${favIcon(!!it.fav)}</button><span class="card__tag tag--${cat}">${esc(cat)}</span>`;
     card.onclick = () => openFiche(it);
+    card.querySelector(".card__fav").onclick = async (e) => {
+      e.stopPropagation(); it.fav = !it.fav; try { await db.put(it); } catch {}
+      renderHistory();
+    };
     list.appendChild(card);
   });
 }
@@ -773,20 +940,56 @@ function formatDate(iso) { try { return new Date(iso).toLocaleDateString("fr-FR"
 /* ------------------------------------------------------------------ */
 /* Profil                                                              */
 /* ------------------------------------------------------------------ */
-$("#backendUrl").value = store.backend;
+/* --- Initialisation des contrôles depuis le store --- */
 $("#langue").value = store.langue;
 $("#autoRead").checked = store.autoRead;
-$("#backendUrl").addEventListener("change", (e) => { store.backend = e.target.value.trim(); toast("Serveur enregistré"); });
-$("#langue").addEventListener("change", (e) => { store.langue = e.target.value; });
-$("#autoRead").addEventListener("change", (e) => { store.autoRead = e.target.checked; });
-
 $("#textSize").value = store.textSize;
 $("#vibrate").checked = store.vibrate;
+$("#theme").value = store.theme;
+$("#density").value = store.density;
+$("#reduceMotion").checked = store.reduceMotion;
+$("#ttsRate").value = store.ttsRate;
+$("#imgQuality").value = store.imgQuality;
+$("#autoCamera").checked = store.autoCamera;
+$("#scanSound").checked = store.scanSound;
+$("#showConfidence").checked = store.showConfidence;
+$("#saveHistory").checked = store.saveHistory;
+
+/* --- Applique l'apparence au démarrage --- */
 applyAccent(store.accent);
 applyTextSize(store.textSize);
+applyTheme(store.theme);
+applyDensity(store.density);
+applyReduceMotion(store.reduceMotion);
+
+/* --- Handlers --- */
+$("#langue").addEventListener("change", (e) => { store.langue = e.target.value; });
+$("#autoRead").addEventListener("change", (e) => { store.autoRead = e.target.checked; });
 $("#textSize").addEventListener("change", (e) => { store.textSize = e.target.value; applyTextSize(store.textSize); });
 $("#vibrate").addEventListener("change", (e) => { store.vibrate = e.target.checked; });
+$("#theme").addEventListener("change", (e) => { store.theme = e.target.value; applyTheme(store.theme); });
+$("#density").addEventListener("change", (e) => { store.density = e.target.value; applyDensity(store.density); });
+$("#reduceMotion").addEventListener("change", (e) => { store.reduceMotion = e.target.checked; applyReduceMotion(store.reduceMotion); });
+$("#ttsRate").addEventListener("change", (e) => { store.ttsRate = parseFloat(e.target.value); });
+$("#imgQuality").addEventListener("change", (e) => { store.imgQuality = e.target.value; });
+$("#autoCamera").addEventListener("change", (e) => { store.autoCamera = e.target.checked; });
+$("#scanSound").addEventListener("change", (e) => { store.scanSound = e.target.checked; if (e.target.checked) scanBeep(); });
+$("#showConfidence").addEventListener("change", (e) => { store.showConfidence = e.target.checked; });
+$("#saveHistory").addEventListener("change", (e) => { store.saveHistory = e.target.checked; });
 $$("#swatches .sw").forEach((b) => b.addEventListener("click", () => { store.accent = b.dataset.accent; applyAccent(store.accent); }));
+
+/* --- Liste des voix de synthèse --- */
+function populateVoices() {
+  const synth = window.speechSynthesis; if (!synth) return;
+  const sel = $("#ttsVoice"); if (!sel) return;
+  const voices = synth.getVoices() || [];
+  const fr = voices.filter((v) => /fr/i.test(v.lang));
+  const list = fr.length ? fr : voices;
+  sel.innerHTML = '<option value="">Par défaut</option>' + list.map((v) => `<option value="${esc(v.name)}">${esc(v.name)}</option>`).join("");
+  sel.value = store.ttsVoice;
+}
+if (window.speechSynthesis) { populateVoices(); window.speechSynthesis.onvoiceschanged = populateVoices; }
+$("#ttsVoice")?.addEventListener("change", (e) => { store.ttsVoice = e.target.value; });
 
 $("#exportBtn").addEventListener("click", async () => {
   let items = []; try { items = await db.all(); } catch {}
@@ -800,6 +1003,13 @@ $("#exportBtn").addEventListener("click", async () => {
 $("#clearBtn").addEventListener("click", async () => {
   if (!confirm("Effacer définitivement tout l'historique ?")) return;
   await db.clear(); renderHistory(); renderProfil(); toast("Historique effacé");
+});
+
+$("#resetBtn").addEventListener("click", () => {
+  if (!confirm("Réinitialiser tous les réglages aux valeurs par défaut ?")) return;
+  Object.keys(localStorage).filter((k) => k.startsWith("lumen.")).forEach((k) => localStorage.removeItem(k));
+  toast("Réglages réinitialisés");
+  setTimeout(() => location.reload(), 600);
 });
 
 async function renderProfil() {
@@ -819,6 +1029,6 @@ function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = fal
 
 showView("scanner");
 
-  </script>
+</script>
 </body>
 </html>
